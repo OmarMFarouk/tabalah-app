@@ -16,12 +16,7 @@ import 'package:tabala/views/auth/register_view.dart';
 import 'package:tabala/views/auth/forgot_password_view.dart';
 import 'package:tabala/views/auth/verify_email_view.dart';
 
-enum LoginType { player, coach }
-
 /// How the person in front of the phone is getting in.
-///
-/// Only the member portal offers both: a coach has no parent code and never
-/// sees this choice.
 enum _SignInMode {
   /// Email and password - the member's own account, full access.
   account,
@@ -30,29 +25,23 @@ enum _SignInMode {
   parentCode,
 }
 
-/// One login screen for both portals - the only difference is copy and
-/// whether a "create account" link is offered (players can self-register,
-/// trainers are provisioned by an admin).
+/// The only way into the app.
 ///
-/// Step 2 of the sign-in flow. For members it also carries the choice
-/// between the two ways in, which lives here rather than on the portal
-/// chooser for the reason spelled out on [WelcomeView]: "member or coach"
-/// is a question about who you are, and "my account or a code" is a question
-/// about what you happen to be holding. Asking them one after the other is
-/// what stops a parent's code looking like a third kind of account.
+/// There is no portal to choose. `login` returns the account's role and
+/// AuthGate renders the matching app, so asking "member or coach?" first was
+/// decoration - a coach who picked "member" still landed in the coach app.
+/// Every portal the academy adds is invisible here.
+///
+/// The one real choice is what you are holding: your own account, or a code
+/// a member gave you. That is not a third kind of account, so it sits as a
+/// switch on this screen rather than as a peer of "sign in".
 class LoginView extends StatefulWidget {
-  final LoginType loginType;
-
   /// Opens straight on the parent-code form. Used when something already
   /// knows the person is a parent - a deep link, or the "view as parent"
   /// route out of a signed-out state.
   final bool startAsParent;
 
-  const LoginView({
-    super.key,
-    required this.loginType,
-    this.startAsParent = false,
-  });
+  const LoginView({super.key, this.startAsParent = false});
 
   @override
   State<LoginView> createState() => _LoginViewState();
@@ -68,8 +57,7 @@ class _LoginViewState extends State<LoginView> {
       ? _SignInMode.parentCode
       : _SignInMode.account;
 
-  bool get isPlayer => widget.loginType == LoginType.player;
-  bool get _isParent => isPlayer && _mode == _SignInMode.parentCode;
+  bool get _isParent => _mode == _SignInMode.parentCode;
 
   @override
   void dispose() {
@@ -155,32 +143,20 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(height: 12),
                     const CustomHeader(showBack: true),
                     const SizedBox(height: 14),
-                    _stepPill('portal_step'.tr(args: ['2'])),
-                    const SizedBox(height: 14),
                     Text(
-                      _isParent
-                          ? "parent_portal".tr()
-                          : (isPlayer
-                                ? "player_portal".tr()
-                                : "coach_portal".tr()),
+                      _isParent ? "parent_portal".tr() : "sign_in".tr(),
                       style: AppStyles.bold24Black,
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      _isParent
-                          ? "parent_portal_desc".tr()
-                          : (isPlayer
-                                ? "description".tr()
-                                : "coach_login_desc".tr()),
+                      _isParent ? "parent_portal_desc".tr() : "sign_in_desc".tr(),
                       textAlign: TextAlign.center,
                       style: AppStyles.regular14Grey,
                     ),
                     const SizedBox(height: 22),
 
-                    if (isPlayer) ...[
-                      _modeSwitch(isLoading),
-                      const SizedBox(height: 22),
-                    ],
+                    _modeSwitch(isLoading),
+                    const SizedBox(height: 22),
 
                     if (_isParent)
                       ..._parentFields()
@@ -194,11 +170,7 @@ class _LoginViewState extends State<LoginView> {
                       child: CustomElevatedButton(
                         text: isLoading
                             ? "loading".tr()
-                            : (_isParent
-                                  ? "parent_sign_in".tr()
-                                  : (isPlayer
-                                        ? "player_login".tr()
-                                        : "coach_login".tr())),
+                            : (_isParent ? "parent_sign_in".tr() : "sign_in".tr()),
                         onPressed: isLoading ? null : _submit,
                       ),
                     ),
@@ -213,17 +185,6 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  Widget _stepPill(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: .28)),
-      ),
-      child: Text(label, style: AppStyles.bold12Gold),
-    );
-  }
 
   /// The two ways a member's household can get in, side by side.
   ///
@@ -360,8 +321,9 @@ class _LoginViewState extends State<LoginView> {
         ),
       ),
       const SizedBox(height: 14),
-      if (isPlayer)
-        Padding(
+      // Registration always creates a player - coaches and employees are
+      // provisioned in the admin panel - so this is never the wrong link.
+      Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: GestureDetector(
             onTap: isLoading

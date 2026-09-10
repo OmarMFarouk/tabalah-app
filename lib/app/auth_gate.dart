@@ -10,6 +10,7 @@ import 'package:tabala/src/prefs/app_prefs.dart';
 import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/views/auth/onboarding_view.dart';
 import 'package:tabala/views/auth/welcome_view.dart';
+import 'package:tabala/views/employee/employee_main_view.dart';
 import 'package:tabala/views/guardian/guardian_main_view.dart';
 import 'package:tabala/views/player/player_main_view.dart';
 import 'package:tabala/views/trainer/trainer_main_view.dart';
@@ -69,7 +70,12 @@ class _AuthGateState extends State<AuthGate> {
           if (state.isGuardian) return GuardianMainView();
 
           if (state.user.isTrainer) return TrainerMainView();
+          if (state.user.isEmployee) return const EmployeeMainView();
           if (state.user.isPlayer) return PlayerMainView();
+
+          // Admins and the owner have no phone portal - the panel is a
+          // desktop app - so they are told rather than dropped into a
+          // member app whose every endpoint would 403 on them.
           return _WrongPortalScreen();
         }
 

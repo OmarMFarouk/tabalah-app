@@ -24,6 +24,11 @@ class ApiEndpoints {
   /// Registration is two-step: /register issues an emailed code and no
   /// token, and /login refuses an unverified address. One of these has to
   /// succeed before the account can be used.
+  // --- Employee portal ---
+  static const employeeAttendanceToday = '/employee/attendance/today';
+  static const employeeAttendances = '/employee/attendances';
+  static const employeeCheckIn = '/employee/attendance';
+
   static const verifyEmail = '/verify-email';
   static const resendVerification = '/resend-verification';
 

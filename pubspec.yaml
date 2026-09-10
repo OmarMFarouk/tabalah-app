@@ -49,6 +49,7 @@ dependencies:
   # Hands the guardian code to whichever app the parent is actually on —
   # WhatsApp, SMS, mail — instead of only the clipboard.
   share_plus: ^10.1.4
+  geolocator: ^13.0.2
 
 dev_dependencies:
   flutter_test:

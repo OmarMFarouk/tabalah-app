@@ -4,6 +4,10 @@
          permission: image_picker uses the system photo picker, which hands
          back the one file the user chose. -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Employee clock-in. Fine location, not coarse: the fence is tens of
+         metres and coarse location is accurate to a few hundred. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="Tabalah Club"
         android:name="${applicationName}"

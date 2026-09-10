@@ -59,6 +59,7 @@ class UserModel {
 
   bool get isPlayer => role == 'player';
   bool get isTrainer => role == 'trainer';
+  bool get isEmployee => role == 'employee';
   bool get isAdmin => role == 'admin' || role == 'super-admin';
   bool get isStaff => isAdmin || role == 'employee';
 
