@@ -70,12 +70,17 @@ class _AuthGateState extends State<AuthGate> {
           if (state.isGuardian) return GuardianMainView();
 
           if (state.user.isTrainer) return TrainerMainView();
-          if (state.user.isEmployee) return const EmployeeMainView();
+
+          // Every staff role, not just `employee`. Gating this on one role
+          // sent admins and the owner to the wrong-portal screen, which is
+          // wrong twice over: the panel is where they *manage* the club,
+          // but clocking in happens at the academy with a phone in hand,
+          // and they do that like anyone else.
+          if (state.user.isStaff) return const EmployeeMainView();
+
           if (state.user.isPlayer) return PlayerMainView();
 
-          // Admins and the owner have no phone portal - the panel is a
-          // desktop app - so they are told rather than dropped into a
-          // member app whose every endpoint would 403 on them.
+          // Only a role the app has never heard of reaches this.
           return _WrongPortalScreen();
         }
 
