@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:tabala/api/api_client.dart';
 import 'package:tabala/api/api_endpoints.dart';
 import 'package:tabala/api/api_exception.dart';
@@ -14,7 +13,6 @@ class SessionDetailState extends Equatable {
   /// Fetched lazily - the QR endpoint is a separate call and the token is
   /// only needed when the trainer actually opens the display sheet.
   final String? qrToken;
-
   final bool isLoading;
   final bool isMarking;
   final String? error;
@@ -29,11 +27,11 @@ class SessionDetailState extends Equatable {
   });
 
   bool get hasData => session != null;
-
   int get markedCount => players.where((p) => p.isMarked).length;
-
   int get presentCount =>
       players.where((p) => p.attendanceStatus == 'present').length;
+  int get assessedCount => players.where((p) => p.isAssessed).length;
+  int get flaggedCount => players.where((p) => p.hasHealthCondition).length;
 
   SessionDetailState copyWith({
     MembershipSessionModel? session,
@@ -59,8 +57,8 @@ class SessionDetailState extends Equatable {
       [session, players, qrToken, isLoading, isMarking, error];
 }
 
-/// One trainer session: its roster with per-player attendance status,
-/// manual and QR-scan marking, and the session's own display QR.
+/// One trainer session: its roster with per-player attendance, health flags
+/// and assessments, manual and QR-scan marking, and the session's own QR.
 class SessionDetailCubit extends Cubit<SessionDetailState> {
   SessionDetailCubit() : super(const SessionDetailState());
 
@@ -72,7 +70,6 @@ class SessionDetailCubit extends Cubit<SessionDetailState> {
 
     try {
       final response = await ApiClient.instance.get(ApiEndpoints.trainerSession(sessionId));
-
       emit(state.copyWith(
         session: MembershipSessionModel.fromJson(
           Map<String, dynamic>.from(response['session'] as Map),
@@ -104,14 +101,7 @@ class SessionDetailCubit extends Cubit<SessionDetailState> {
     emit(state.copyWith(
       isMarking: true,
       players: state.players
-          .map((p) => p.userId == userId
-              ? SessionPlayerModel(
-                  userId: p.userId,
-                  name: p.name,
-                  attendanceStatus: status,
-                  attendanceId: p.attendanceId,
-                )
-              : p)
+          .map((p) => p.userId == userId ? p.copyWith(attendanceStatus: status) : p)
           .toList(),
       clearError: true,
     ));
@@ -127,13 +117,37 @@ class SessionDetailCubit extends Cubit<SessionDetailState> {
           if (note != null && note.isNotEmpty) 'note': note,
         },
       );
-
       await load(_sessionId!, refresh: true);
       emit(state.copyWith(isMarking: false));
       return null;
     } on ApiException catch (e) {
       await load(_sessionId!, refresh: true);
       emit(state.copyWith(isMarking: false, error: e.message));
+      return e.message;
+    }
+  }
+
+  /// The trainer's assessment of one player for this session. Saving again
+  /// replaces the earlier one.
+  Future<String?> assess({
+    required int userId,
+    required double rating,
+    String? note,
+  }) async {
+    if (_sessionId == null) return null;
+
+    try {
+      await ApiClient.instance.post(
+        ApiEndpoints.trainerSessionAssessments(_sessionId!),
+        data: {
+          'user_id': userId,
+          'rating': rating,
+          if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        },
+      );
+      await load(_sessionId!, refresh: true);
+      return null;
+    } on ApiException catch (e) {
       return e.message;
     }
   }
@@ -154,7 +168,6 @@ class SessionDetailCubit extends Cubit<SessionDetailState> {
           if (note != null && note.isNotEmpty) 'note': note,
         },
       );
-
       await load(_sessionId!, refresh: true);
       return null;
     } on ApiException catch (e) {

@@ -289,6 +289,7 @@ class _TrainerHomeViewState extends State<TrainerHomeView> {
                       name: p.name,
                       initial: p.initial,
                       subtitle: '${'attendance_rate'.tr()} · ${p.attendanceRate.round()}%',
+                      flagged: p.hasHealthCondition,
                       onTap: () => _openSession(first.sessionId),
                     ),
                   ),

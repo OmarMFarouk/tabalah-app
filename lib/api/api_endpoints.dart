@@ -77,6 +77,10 @@ class ApiEndpoints {
   /// note on [_scope].
   static const playerSessionRatings = '/player/session-ratings';
 
+  /// How the player's trainers have rated them - overall and per session.
+  /// Read-only, so it follows [_scope] into the parent portal.
+  static String get playerAssessments => '$_scope/assessments';
+
   /// added - the club's online payment methods, already filtered server-side
   /// to active + online sources, so whatever comes back is safe to render as
   /// a choice at checkout.
@@ -107,6 +111,10 @@ class ApiEndpoints {
   static String trainerSessionQr(int sessionId) => '/trainer/sessions/$sessionId/qr';
   static String trainerSessionQrRegenerate(int sessionId) =>
       '/trainer/sessions/$sessionId/qr/regenerate';
+
+  /// The trainer's assessment of one player for one session.
+  static String trainerSessionAssessments(int sessionId) =>
+      '/trainer/sessions/$sessionId/assessments';
 
   static const trainerAttendances = '/trainer/attendances';
   static const trainerAttendancesScan = '/trainer/attendances/scan';

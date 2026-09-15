@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:tabala/components/general/assessment_widgets.dart';
 import 'package:tabala/components/general/club_widgets.dart';
 import 'package:tabala/cubits/async_state.dart';
 import 'package:tabala/cubits/trainer_players_cubit.dart';
@@ -21,6 +21,7 @@ class PlayersView extends StatefulWidget {
 
 class _PlayersViewState extends State<PlayersView> {
   late final TrainerPlayersCubit _cubit;
+
   /// Mirrors the cubit's sort so the toggle can show its state. The sort
   /// itself is applied by the server — this is just which icon to draw.
   bool _worstFirst = false;
@@ -77,8 +78,7 @@ class _PlayersViewState extends State<PlayersView> {
               ),
             ),
             Expanded(
-              child: BlocBuilder<TrainerPlayersCubit,
-                  AsyncState<TrainerPlayersPage>>(
+              child: BlocBuilder<TrainerPlayersCubit, AsyncState<TrainerPlayersPage>>(
                 builder: (context, state) {
                   return AsyncStateView(
                     isLoading: state.isBusy,
@@ -150,6 +150,9 @@ class _PlayersViewState extends State<PlayersView> {
 
     return ClubCard(
       margin: const EdgeInsets.only(bottom: 12),
+      border: player.hasHealthCondition
+          ? Border.all(color: AppColors.redcolor.withValues(alpha: .4))
+          : null,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => PlayerDetailView(userId: player.userId)),
@@ -183,6 +186,23 @@ class _PlayersViewState extends State<PlayersView> {
               StatusChip(label: '${rate.round()}%', color: tone),
             ],
           ),
+          if (player.hasHealthCondition || player.averageRating != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (player.hasHealthCondition) const HealthFlag(dense: true),
+                const Spacer(),
+                if (player.averageRating != null) ...[
+                  RatingStars(value: player.averageRating!, size: 15),
+                  const SizedBox(width: 6),
+                  Text(
+                    player.averageRating!.toStringAsFixed(1),
+                    style: AppStyles.bold12Black,
+                  ),
+                ],
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),

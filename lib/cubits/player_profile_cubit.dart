@@ -40,6 +40,7 @@ class PlayerProfileCubit extends Cubit<AsyncState<UserModel>> {
     num? height,
     num? weight,
     String? emergencyContact,
+    String? healthCondition,
   }) async {
     final previous = state.data;
     emit(state.toRefreshing());
@@ -52,6 +53,9 @@ class PlayerProfileCubit extends Cubit<AsyncState<UserModel>> {
           if (height != null) 'height': height,
           if (weight != null) 'weight': weight,
           if (emergencyContact != null) 'emergency_contact': emergencyContact,
+          // Sent even when empty: that is how a family clears a condition
+          // that no longer applies.
+          if (healthCondition != null) 'health_condition': healthCondition,
         },
       );
 

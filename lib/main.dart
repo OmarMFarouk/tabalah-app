@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:easy_localization/easy_localization.dart';
@@ -19,13 +18,11 @@ import 'package:tabala/src/theme/app_theme_provider.dart';
 import 'package:tabala/src/theme/app_themes.dart';
 import 'package:tabala/src/theme/theme_signal.dart';
 
-import 'api/overrides.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await EasyLocalization.ensureInitialized();
-  HttpOverrides.global = MyHttpOverrides();
   // intl needs per-locale symbol tables loaded before DateFormat can render
   // Arabic month and weekday names. Without this the first `DateFormat(...,
   // 'ar')` throws a LocaleDataException - and since nearly every screen

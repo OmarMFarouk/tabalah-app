@@ -510,6 +510,9 @@ class RosterRow extends StatelessWidget {
   final String? status;
   final VoidCallback? onTap;
 
+  /// Marks a player with a declared health condition.
+  final bool flagged;
+
   const RosterRow({
     super.key,
     required this.name,
@@ -517,6 +520,7 @@ class RosterRow extends StatelessWidget {
     this.subtitle,
     this.status,
     this.onTap,
+    this.flagged = false,
   });
 
   @override
@@ -533,11 +537,25 @@ class RosterRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppStyles.bold14Black,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppStyles.bold14Black,
+                      ),
+                    ),
+                    if (flagged) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.medical_information_rounded,
+                        size: 16,
+                        color: AppColors.redcolor,
+                      ),
+                    ],
+                  ],
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),

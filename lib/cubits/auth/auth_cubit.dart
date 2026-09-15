@@ -161,6 +161,9 @@ class AuthCubit extends Cubit<AuthState> {
     num? height,
     num? weight,
     String? emergencyContact,
+    String? healthCondition,
+    bool acceptedTerms = false,
+    bool acceptedPledge = false,
   }) async {
     emit(const AuthLoading());
 
@@ -177,6 +180,12 @@ class AuthCubit extends Cubit<AuthState> {
           if (weight != null) 'weight': weight,
           if (emergencyContact != null && emergencyContact.isNotEmpty)
             'emergency_contact': emergencyContact,
+          if (healthCondition != null && healthCondition.isNotEmpty)
+            'health_condition': healthCondition,
+          // Both are required server-side; the screen will not submit
+          // without them, and this sends what was actually ticked.
+          'terms_accepted': acceptedTerms,
+          'guardian_pledge': acceptedPledge,
         },
       );
 

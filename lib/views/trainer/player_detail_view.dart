@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:tabala/components/general/assessment_widgets.dart';
 import 'package:tabala/components/general/club_widgets.dart';
 import 'package:tabala/cubits/async_state.dart';
 import 'package:tabala/cubits/trainer_players_cubit.dart';
@@ -11,7 +11,8 @@ import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/src/utils/app_date.dart';
 import 'package:tabala/src/utils/status_ui.dart';
 
-/// One player's record, limited to the signed-in trainer's own memberships.
+/// One player's record, limited to the signed-in trainer's own memberships:
+/// their health note first, then how they have been assessed, then attendance.
 class PlayerDetailView extends StatefulWidget {
   final int userId;
 
@@ -71,14 +72,15 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               children: [
                 ClubAvatar(
                   initial: player.initial,
-                  photoUrl: (player.avatar?.startsWith('http') ?? false)
-                      ? player.avatar
-                      : null,
+                  photoUrl: player.photo,
                   size: 70,
                   ring: true,
                 ),
                 const SizedBox(height: 12),
-                Text(player.name, style: AppStyles.bold20Black.copyWith(color: PanelInk.strong(context))),
+                Text(
+                  player.name,
+                  style: AppStyles.bold20Black.copyWith(color: PanelInk.strong(context)),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   player.email ?? '—',
@@ -98,18 +100,18 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: StatTile(
-                        label: 'height_hint'.tr(),
-                        value: player.height == null ? '—' : '${player.height}',
-                        icon: Icons.height_rounded,
+                        label: 'average_rating'.tr(),
+                        value: player.averageRating?.toStringAsFixed(1) ?? '—',
+                        icon: Icons.star_rounded,
                         onDark: true,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: StatTile(
-                        label: 'weight_hint'.tr(),
-                        value: player.weight == null ? '—' : '${player.weight}',
-                        icon: Icons.monitor_weight_outlined,
+                        label: 'height_hint'.tr(),
+                        value: player.height == null ? '—' : '${player.height}',
+                        icon: Icons.height_rounded,
                         onDark: true,
                       ),
                     ),
@@ -118,6 +120,44 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               ],
             ),
           ),
+
+          // The first thing on the page, not the last: this is what the
+          // trainer needs before the player sets foot on the pitch.
+          if (player.hasHealthCondition) ...[
+            const SizedBox(height: 12),
+            HealthNoteCard(note: player.healthCondition ?? ''),
+          ],
+
+          if (player.emergencyContact != null) ...[
+            const SizedBox(height: 12),
+            ClubCard(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Icon(Icons.emergency_rounded, color: AppColors.goldInk),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('emergency_contact'.tr(), style: AppStyles.medium14Black)),
+                  Text(player.emergencyContact!, style: AppStyles.bold14Black),
+                ],
+              ),
+            ),
+          ],
+
+          SectionHeader(
+            title: 'assessments'.tr(),
+            subtitle: 'assessments_trainer_desc'.tr(),
+          ),
+          if (player.assessments.isEmpty)
+            ClubCard(
+              child: EmptyState(
+                icon: Icons.star_outline_rounded,
+                title: 'no_assessments'.tr(),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            )
+          else
+            ...player.assessments.map((a) => AssessmentCard(item: a)),
+
           SectionHeader(
             title: 'attendance_history'.tr(),
             subtitle: 'your_classes_only'.tr(),
@@ -153,7 +193,11 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               color: tone.withValues(alpha: .14),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(StatusUi.attendanceIcon(a.status), size: 18, color: StatusUi.readable(context, tone)),
+            child: Icon(
+              StatusUi.attendanceIcon(a.status),
+              size: 18,
+              color: StatusUi.readable(context, tone),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

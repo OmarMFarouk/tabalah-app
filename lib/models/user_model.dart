@@ -23,7 +23,6 @@ class UserModel {
   /// column holds a storage-relative path for uploads, which is not
   /// loadable by the app on its own.
   final String? avatarUrl;
-
   final String role;
   final String email;
   final String? phone;
@@ -36,7 +35,6 @@ class UserModel {
   /// `diffForHumans()`, or the literal string "Never". It is *not* a
   /// timestamp, so do not try to parse it.
   final String? lastSeen;
-
   final PlayerProfile? player;
   final TrainerProfile? trainer;
   final EmployeeProfile? employee;
@@ -119,22 +117,25 @@ class PlayerProfile {
   /// validates it with `required|uuid`.
   final String? qrToken;
 
-  /// The code a parent types into the app to watch this player read-only.
-  /// Shown to the player themselves so they can hand it over; there is
-  /// nothing here a guardian could not already see.
   /// The member's club id — `TBLH-00042`. What is on their card and what
   /// they give at the desk.
   final String? clubId;
 
+  /// The code a parent types into the app to watch this player read-only.
+  /// Shown to the player themselves so they can hand it over; there is
+  /// nothing here a guardian could not already see.
   final String? guardianCode;
 
   /// False once the club has switched the parent portal off for this
   /// player. The code still exists, it just stops being accepted.
   final bool guardianAccessEnabled;
-
   final String? emergencyContact;
   final num? weight;
   final num? height;
+
+  /// What the family disclosed at signup, and keeps current from the profile.
+  final bool hasHealthCondition;
+  final String? healthCondition;
 
   const PlayerProfile({
     required this.id,
@@ -145,6 +146,8 @@ class PlayerProfile {
     this.emergencyContact,
     this.weight,
     this.height,
+    this.hasHealthCondition = false,
+    this.healthCondition,
   });
 
   factory PlayerProfile.fromJson(Map<String, dynamic> json) {
@@ -161,6 +164,8 @@ class PlayerProfile {
       // Both columns are decimals, so they arrive as strings.
       weight: J.asDoubleOrNull(json['player_weight']),
       height: J.asDoubleOrNull(json['player_height']),
+      hasHealthCondition: J.asBool(json['player_has_health_condition']),
+      healthCondition: J.asStringOrNull(json['player_health_condition']),
     );
   }
 }

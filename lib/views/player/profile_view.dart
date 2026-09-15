@@ -23,6 +23,8 @@ import 'package:tabala/src/theme/app_theme_provider.dart';
 import 'package:tabala/src/utils/app_date.dart';
 import 'package:tabala/views/guardian/guardian_main_view.dart';
 import 'package:tabala/views/player/my_qr_view.dart';
+import 'package:tabala/views/player/assessments_view.dart';
+import 'package:tabala/components/general/assessment_widgets.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -207,6 +209,27 @@ class _ProfileViewState extends State<ProfileView> {
               ],
             ),
           ),
+
+          // The disclosed condition, as the trainer sees it. Kept current
+          // from the edit sheet above - the signup pledge asks for that.
+          if (user.player?.hasHealthCondition ?? false) ...[
+            const SizedBox(height: 12),
+            HealthNoteCard(note: user.player?.healthCondition ?? ''),
+          ],
+
+          // A parent has assessments as a tab of their own.
+          if (!AppScope.isGuardian) ...[
+            SectionHeader(title: 'assessments'.tr()),
+            _tile(
+              icon: Icons.star_rate_rounded,
+              title: 'my_assessments'.tr(),
+              subtitle: 'assessments_desc'.tr(),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AssessmentsView()),
+              ),
+            ),
+          ],
 
           // The QR is an identity badge, not an action: a parent presenting
           // it at the door is the whole point of the guardian session, so it
@@ -480,6 +503,8 @@ class _ProfileViewState extends State<ProfileView> {
     final weight = TextEditingController(text: user.player?.weight?.toString() ?? '');
     final emergency =
         TextEditingController(text: user.player?.emergencyContact ?? '');
+    final health =
+        TextEditingController(text: user.player?.healthCondition ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -528,6 +553,16 @@ class _ProfileViewState extends State<ProfileView> {
               hinttext: 'emergency_contact_hint'.tr(),
               keyboardtype: TextInputType.phone,
             ),
+            const SizedBox(height: 12),
+            CustomTextFormField(
+              controller: health,
+              hinttext: 'health_condition_hint'.tr(),
+              labletext: 'health_condition'.tr(),
+              maxlines: 3,
+              maxLength: 1000,
+            ),
+            const SizedBox(height: 6),
+            Text('health_condition_desc'.tr(), style: AppStyles.regular12Grey),
             const SizedBox(height: 20),
             CustomElevatedButton(
               gold: true,
@@ -539,6 +574,7 @@ class _ProfileViewState extends State<ProfileView> {
                   height: num.tryParse(height.text),
                   weight: num.tryParse(weight.text),
                   emergencyContact: emergency.text.trim(),
+                  healthCondition: health.text.trim(),
                 );
                 if (error != null && mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-
 import 'package:tabala/src/app_scope.dart';
 import 'package:tabala/src/colors/app_colors.dart';
+import 'package:tabala/views/player/assessments_view.dart';
 import 'package:tabala/views/player/attendance_view.dart';
 import 'package:tabala/views/player/payments_view.dart';
 import 'package:tabala/views/player/player_home_view.dart';
@@ -16,13 +16,12 @@ import 'package:tabala/views/player/profile_view.dart';
 /// authenticates as the player it watches and the API mirrors the player's
 /// read routes under `/guardian`, so these views already fetch the right
 /// data without knowing anything about parents; what each one does know is
-/// to hide its action affordances when [AppScope.isGuardian] is set. Copies
-/// would have been simpler to write and would have drifted out of step with
-/// the member app by the second change to either.
+/// to hide its action affordances when [AppScope.isGuardian] is set.
 ///
-/// Four tabs, not five: the sports catalogue is gone. Everything on it leads
-/// to a checkout a parent cannot complete, and a screen whose every button
-/// is disabled is worse than one that isn't there.
+/// Assessments get a tab of their own here rather than a tile on the
+/// profile: how the child is being rated is one of the two things a parent
+/// opens the app to see, next to attendance. The sports catalogue is gone —
+/// everything on it leads to a checkout a parent cannot complete.
 class GuardianMainView extends StatefulWidget {
   GuardianMainView({super.key});
 
@@ -38,6 +37,7 @@ class _GuardianMainViewState extends State<GuardianMainView> {
   List<Widget> get _screens => [
     PlayerHomeView(),
     AttendanceView(),
+    AssessmentsView(asTab: true),
     PaymentsView(),
     ProfileView(),
   ];
@@ -61,6 +61,11 @@ class _GuardianMainViewState extends State<GuardianMainView> {
             Icons.fact_check_rounded,
             Icons.fact_check_outlined,
             'attendance'.tr(),
+          ),
+          ClubNavItem(
+            Icons.star_rounded,
+            Icons.star_outline_rounded,
+            'assessments'.tr(),
           ),
           ClubNavItem(
             Icons.receipt_long_rounded,

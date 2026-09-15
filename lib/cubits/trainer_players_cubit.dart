@@ -112,6 +112,7 @@ class TrainerPlayerDetailCubit extends Cubit<AsyncState<TrainerPlayerDetail>> {
       emit(AsyncState.ready(TrainerPlayerDetail.fromJson(
         player: Map<String, dynamic>.from(response['player'] as Map),
         attendances: response['attendances'],
+        assessments: response['assessments'],
       )));
     } on ApiException catch (e) {
       emit(AsyncState.failed(e.message, previous: state.data));

@@ -1,3 +1,4 @@
+import 'assessment_model.dart';
 import 'json_utils.dart';
 
 /// `/trainer/players` - everyone enrolled across the trainer's memberships,
@@ -10,12 +11,20 @@ class TrainerPlayerSummary {
   final String? avatar;
   final double attendanceRate;
 
+  /// Across every trainer who has assessed them. Null when nobody has yet.
+  final double? averageRating;
+  final int ratingsCount;
+  final bool hasHealthCondition;
+
   const TrainerPlayerSummary({
     required this.userId,
     required this.name,
     this.email,
     this.avatar,
     this.attendanceRate = 0,
+    this.averageRating,
+    this.ratingsCount = 0,
+    this.hasHealthCondition = false,
   });
 
   String get initial => name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
@@ -30,12 +39,15 @@ class TrainerPlayerSummary {
       email: J.asStringOrNull(json['email']),
       avatar: J.asStringOrNull(json['avatar']),
       attendanceRate: J.asDouble(json['attendance_rate']),
+      averageRating: J.asDoubleOrNull(json['average_rating']),
+      ratingsCount: J.asInt(json['ratings_count']),
+      hasHealthCondition: J.asBool(json['has_health_condition']),
     );
   }
 }
 
-/// `/trainer/players/{playerUserId}` - the same person plus their
-/// attendance history, again limited to the trainer's own memberships.
+/// `/trainer/players/{playerUserId}` - the same person, their health note,
+/// their assessments, and their attendance in this trainer's memberships.
 class TrainerPlayerDetail {
   final int userId;
   final String name;
@@ -43,7 +55,12 @@ class TrainerPlayerDetail {
   final String? avatar;
   final double? height;
   final double? weight;
+  final String? emergencyContact;
+  final bool hasHealthCondition;
+  final String? healthCondition;
+  final double? averageRating;
   final List<TrainerPlayerAttendance> attendances;
+  final List<AssessmentItem> assessments;
 
   const TrainerPlayerDetail({
     required this.userId,
@@ -52,10 +69,18 @@ class TrainerPlayerDetail {
     this.avatar,
     this.height,
     this.weight,
+    this.emergencyContact,
+    this.hasHealthCondition = false,
+    this.healthCondition,
+    this.averageRating,
     this.attendances = const [],
+    this.assessments = const [],
   });
 
   String get initial => name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+
+  String? get photo =>
+      (avatar != null && avatar!.startsWith('http')) ? avatar : null;
 
   int get presentCount => attendances.where((a) => a.status == 'present').length;
 
@@ -67,6 +92,7 @@ class TrainerPlayerDetail {
   factory TrainerPlayerDetail.fromJson({
     required Map<String, dynamic> player,
     required dynamic attendances,
+    dynamic assessments,
   }) {
     return TrainerPlayerDetail(
       userId: J.asInt(player['user_id']),
@@ -75,7 +101,12 @@ class TrainerPlayerDetail {
       avatar: J.asStringOrNull(player['avatar']),
       height: J.asDoubleOrNull(player['height']),
       weight: J.asDoubleOrNull(player['weight']),
+      emergencyContact: J.asStringOrNull(player['emergency_contact']),
+      hasHealthCondition: J.asBool(player['has_health_condition']),
+      healthCondition: J.asStringOrNull(player['health_condition']),
+      averageRating: J.asDoubleOrNull(player['average_rating']),
       attendances: J.list(attendances, TrainerPlayerAttendance.fromJson),
+      assessments: J.list(assessments, AssessmentItem.fromJson),
     );
   }
 }

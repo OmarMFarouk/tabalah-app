@@ -2,15 +2,9 @@ import 'package:tabala/src/utils/app_date.dart';
 
 import 'json_utils.dart';
 
-/// `/trainer/homepage?date=YYYY-MM-DD` - the trainer's board for one day.
-///
-/// The endpoint defaults to today when no `date` is passed, and echoes back
-/// the date it actually used, which is what the day-strip in the UI binds to.
 class TrainerHomeData {
   final int trainerId;
   final String trainerName;
-
-  /// `YYYY-MM-DD`, echoed by the server.
   final String date;
   final List<TrainerDaySession> sessions;
 
@@ -24,7 +18,6 @@ class TrainerHomeData {
   int get playerCount =>
       sessions.fold<int>(0, (acc, s) => acc + s.players.length);
 
-  /// Mean attendance across the day's sessions, for the hero stat.
   double get averageAttendanceRate {
     if (sessions.isEmpty) return 0;
     final sum = sessions.fold<double>(0, (acc, s) => acc + s.attendanceRate);
@@ -41,12 +34,6 @@ class TrainerHomeData {
   }
 }
 
-/// One session on the trainer's day, with its roster.
-///
-/// `total_attendance_rate` is computed across the *membership's whole
-/// history*, not just this session - the controller groups every attendance
-/// row for the membership, not only the ones on this date. Label it as the
-/// class's overall rate rather than "today's attendance".
 class TrainerDaySession {
   final int sessionId;
   final String sessionDate;
@@ -74,8 +61,7 @@ class TrainerDaySession {
   String get startLabel => AppDate.time(startTime, fallback: '');
   String get whenLabel => AppDate.friendlySession(sessionDate, startTime, endTime);
 
-  /// Mirrors `MembershipSession::ATTENDANCE_GRACE_MINUTES` on the server.
-  /// Kept in step so the home page never offers a scan the API will reject.
+  /// How long either side of the session the API accepts attendance.
   static const int attendanceGraceMinutes = 30;
 
   DateTime? _at(String time) {
@@ -86,17 +72,16 @@ class TrainerDaySession {
   DateTime? get startsAt => _at(startTime);
   DateTime? get endsAt => _at(endTime);
 
-  /// Whether the API would currently accept attendance for this session.
-  /// Used to decide which class a home-page scan belongs to.
   bool get isOpenForAttendance {
     final start = startsAt;
     final end = endsAt;
     if (start == null || end == null) return false;
-
     final now = DateTime.now();
     const grace = Duration(minutes: attendanceGraceMinutes);
     return now.isAfter(start.subtract(grace)) && now.isBefore(end.add(grace));
   }
+
+  int get flaggedCount => players.where((p) => p.hasHealthCondition).length;
 
   factory TrainerDaySession.fromJson(Map<String, dynamic> json) {
     return TrainerDaySession(
@@ -114,19 +99,18 @@ class TrainerDaySession {
 }
 
 class TrainerSessionPlayer {
-  /// This is the **user** id, despite the `player_id` key - the controller
-  /// reads it off the enrollment's user. It is the value the attendance
-  /// endpoints expect as `user_id`.
   final int userId;
   final String name;
   final String? email;
   final double attendanceRate;
+  final bool hasHealthCondition;
 
   const TrainerSessionPlayer({
     required this.userId,
     required this.name,
     this.email,
     this.attendanceRate = 0,
+    this.hasHealthCondition = false,
   });
 
   String get initial => name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
@@ -137,6 +121,7 @@ class TrainerSessionPlayer {
       name: J.asString(json['player_name']),
       email: J.asStringOrNull(json['player_email']),
       attendanceRate: J.asDouble(json['attendance_rate']),
+      hasHealthCondition: J.asBool(json['has_health_condition']),
     );
   }
 }
