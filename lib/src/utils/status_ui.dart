@@ -126,6 +126,10 @@ class StatusUi {
         return AppColors.redcolor;
       case 'expired':
         return AppColors.greycolor;
+      // Paused, not finished: the gold reads as "on hold" next to the green
+      // of a running subscription and the grey of a finished one.
+      case 'frozen':
+        return AppColors.goldInk;
       default:
         return AppColors.greycolor;
     }

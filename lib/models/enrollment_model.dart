@@ -24,6 +24,13 @@ class EnrollmentModel {
   final bool isActive;
   final String? createdAt;
 
+  /// Paused. The countdown has stopped and the end date moves out by the
+  /// days spent frozen when it resumes - so a frozen row whose end date has
+  /// passed is not expired, it is waiting.
+  final bool isFrozen;
+  final int frozenDays;
+  final String? freezeReason;
+
   const EnrollmentModel({
     required this.id,
     required this.userId,
@@ -36,6 +43,9 @@ class EnrollmentModel {
     this.startDate,
     this.endDate,
     this.createdAt,
+    this.isFrozen = false,
+    this.frozenDays = 0,
+    this.freezeReason,
   });
 
   bool get isAwaitingPayment => status == 'pending_payment';
@@ -43,7 +53,8 @@ class EnrollmentModel {
 
   /// "Expired" in the UI sense: the row still says active but its window has
   /// closed, or the backend already flipped it to `expired`.
-  bool get hasLapsed => status == 'expired' || (status == 'active' && !isActive);
+  bool get hasLapsed =>
+      !isFrozen && (status == 'expired' || (status == 'active' && !isActive));
 
   factory EnrollmentModel.fromJson(Map<String, dynamic> json) {
     return EnrollmentModel(
@@ -58,6 +69,9 @@ class EnrollmentModel {
       endDate: J.asStringOrNull(json['end_date']),
       isActive: J.asBool(json['is_active']),
       createdAt: J.asStringOrNull(json['created_at']),
+      isFrozen: J.asBool(json['is_frozen']),
+      frozenDays: J.asInt(json['frozen_days']),
+      freezeReason: J.asStringOrNull(json['freeze_reason']),
     );
   }
 }

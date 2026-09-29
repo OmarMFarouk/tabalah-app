@@ -12,6 +12,9 @@ import 'package:tabala/models/employee_attendance_model.dart';
 import 'package:tabala/src/colors/app_colors.dart';
 import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/src/utils/app_date.dart';
+import 'package:tabala/views/player/player_main_view.dart'
+    show ClubBottomNav, ClubNavItem;
+import 'package:tabala/views/shared/leaves_view.dart';
 
 /// The employee portal.
 ///
@@ -19,8 +22,8 @@ import 'package:tabala/src/utils/app_date.dart';
 /// having done so, which is what makes the button trustworthy - an employee
 /// can see exactly what was filed under their name.
 ///
-/// No bottom navigation: a second tab would imply there is somewhere else to
-/// go. Add one when there is.
+/// There is somewhere else to go now: leave. The shell below carries the
+/// clock-in screen and the leave screen, and nothing else.
 class EmployeeMainView extends StatefulWidget {
   const EmployeeMainView({super.key});
 
@@ -29,6 +32,46 @@ class EmployeeMainView extends StatefulWidget {
 }
 
 class _EmployeeMainViewState extends State<EmployeeMainView> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldcolor,
+      extendBody: true,
+      body: IndexedStack(
+        index: _index,
+        children: const [_ClockInView(), LeavesView(asTab: true)],
+      ),
+      bottomNavigationBar: ClubBottomNav(
+        index: _index,
+        onChanged: (i) => setState(() => _index = i),
+        items: [
+          ClubNavItem(
+            Icons.where_to_vote_rounded,
+            Icons.where_to_vote_outlined,
+            'attendance'.tr(),
+          ),
+          ClubNavItem(
+            Icons.beach_access_rounded,
+            Icons.beach_access_outlined,
+            'leaves'.tr(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Clock in, and the record of having done so.
+class _ClockInView extends StatefulWidget {
+  const _ClockInView();
+
+  @override
+  State<_ClockInView> createState() => _ClockInViewState();
+}
+
+class _ClockInViewState extends State<_ClockInView> {
   late final EmployeeAttendanceCubit _cubit;
   bool _submitting = false;
 
@@ -92,7 +135,9 @@ class _EmployeeMainViewState extends State<EmployeeMainView> {
               backgroundColor: AppColors.surfacecolor,
               onRefresh: () => _cubit.load(refresh: true),
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 28),
+                padding: EdgeInsets.only(
+                  bottom: ClubBottomNav.scrollPadding(context),
+                ),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   HomeHeader(

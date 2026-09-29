@@ -5,6 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tabala/components/general/club_widgets.dart';
 import 'package:tabala/cubits/async_state.dart';
 import 'package:tabala/cubits/enrollments_cubit.dart';
+import 'package:tabala/cubits/invoices_cubit.dart';
+import 'package:tabala/models/invoice_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:tabala/cubits/player_payments_cubit.dart';
 import 'package:tabala/models/enrollment_model.dart';
 import 'package:tabala/models/payment_model.dart';
@@ -33,14 +36,16 @@ class _PaymentsViewState extends State<PaymentsView>
   late final TabController _tabs;
   late final PlayerPaymentsCubit _payments;
   late final EnrollmentsCubit _enrollments;
+  late final InvoicesCubit _invoices;
   final ScrollController _scroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
+    _tabs = TabController(length: 3, vsync: this);
     _payments = PlayerPaymentsCubit()..load();
     _enrollments = EnrollmentsCubit()..load();
+    _invoices = InvoicesCubit()..load();
 
     // `/player/payments` is paginated at 15 per page, so the list has to ask
     // for more as the member scrolls rather than assuming one page is the
@@ -58,6 +63,7 @@ class _PaymentsViewState extends State<PaymentsView>
     _tabs.dispose();
     _payments.close();
     _enrollments.close();
+    _invoices.close();
     super.dispose();
   }
 
@@ -67,6 +73,7 @@ class _PaymentsViewState extends State<PaymentsView>
       providers: [
         BlocProvider.value(value: _payments),
         BlocProvider.value(value: _enrollments),
+        BlocProvider.value(value: _invoices),
       ],
       child: Scaffold(
         backgroundColor: AppColors.scaffoldcolor,
@@ -83,15 +90,125 @@ class _PaymentsViewState extends State<PaymentsView>
             tabs: [
               Tab(text: 'payments'.tr()),
               Tab(text: 'my_subscriptions'.tr()),
+              Tab(text: 'invoices'.tr()),
             ],
           ),
         ),
         body: TabBarView(
           controller: _tabs,
-          children: [_paymentsTab(), _enrollmentsTab()],
+          children: [_paymentsTab(), _enrollmentsTab(), _invoicesTab()],
         ),
       ),
     );
+  }
+
+
+  // ── Invoices ──────────────────────────────────────────────────────────
+  //
+  // The list is data; the invoice itself is a printable page the server
+  // signs a link to for an hour. Tapping one opens that in the browser,
+  // where "save as PDF" already exists and works with Arabic.
+
+  Widget _invoicesTab() {
+    return BlocBuilder<InvoicesCubit, AsyncState<List<InvoiceModel>>>(
+      builder: (context, state) {
+        final list = state.data ?? const <InvoiceModel>[];
+
+        return AsyncStateView(
+          isLoading: state.isBusy,
+          errorMessage: state.hasData ? null : state.error,
+          onRetry: _invoices.load,
+          isEmpty: state.hasData && list.isEmpty,
+          emptyMessage: 'no_invoices_desc'.tr(),
+          child: !state.hasData
+              ? const SizedBox()
+              : RefreshIndicator(
+                  color: AppColors.goldInk,
+                  backgroundColor: AppColors.surfacecolor,
+                  onRefresh: () => _invoices.load(refresh: true),
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      8,
+                      16,
+                      ClubBottomNav.scrollPadding(context),
+                    ),
+                    itemCount: list.length,
+                    itemBuilder: (_, i) => _invoiceCard(list[i]),
+                  ),
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _invoiceCard(InvoiceModel invoice) {
+    return ClubCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.receipt_long_rounded, size: 18, color: AppColors.goldInk),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(invoice.number, style: AppStyles.bold14Black),
+                    const SizedBox(height: 3),
+                    Text(
+                      AppDate.date(invoice.issuedAt),
+                      style: AppStyles.regular12Grey,
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '${invoice.total.toStringAsFixed(2)} ${invoice.currency}',
+                style: AppStyles.bold14Black,
+              ),
+            ],
+          ),
+          if (invoice.isTaxed) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${invoice.subtotal.toStringAsFixed(2)} + '
+              '${invoice.taxAmount.toStringAsFixed(2)} ${invoice.currency}',
+              style: AppStyles.regular12Grey,
+            ),
+          ],
+          const SizedBox(height: 4),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton.icon(
+              onPressed: () => _openInvoice(invoice),
+              icon: Icon(Icons.open_in_new_rounded, size: 16, color: AppColors.goldInk),
+              label: Text(
+                'open_invoice'.tr(),
+                style: TextStyle(color: AppColors.goldInk, fontSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openInvoice(InvoiceModel invoice) async {
+    final url = await _invoices.printableLink(invoice.id);
+    if (!mounted) return;
+
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('something_went_wrong'.tr())),
+      );
+      return;
+    }
+
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
   // ── Payments ──────────────────────────────────────────────────────────
@@ -397,7 +514,30 @@ class _PaymentsViewState extends State<PaymentsView>
               ),
             ],
           ),
-          if (enrollment.isActive) ...[
+          if (enrollment.isFrozen) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.goldInk.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.goldInk.withValues(alpha: .30)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.ac_unit_rounded, size: 16, color: AppColors.goldInk),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'subscription_frozen_desc'.tr(),
+                      style: AppStyles.regular12Grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (enrollment.isActive) ...[
             const SizedBox(height: 14),
             ProgressRow(
               label: 'days_left'.tr(args: ['${AppDate.daysLeft(enrollment.endDate)}']),

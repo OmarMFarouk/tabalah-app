@@ -6,6 +6,7 @@ import 'package:tabala/components/general/club_logo.dart';
 import 'package:tabala/src/colors/app_colors.dart';
 import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/src/theme/app_theme_provider.dart';
+import 'package:tabala/views/shared/notification_bell.dart';
 
 /// The top bar shared by the player and trainer home screens: club identity
 /// on one side, quick display toggles on the other.
@@ -47,6 +48,8 @@ class HomeHeader extends StatelessWidget {
               ],
             ),
           ),
+          const NotificationBell(),
+          const SizedBox(width: 8),
           _iconAction(
             icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
             onTap: () => context.read<AppThemeProvider>().toggle(isCurrentlyDark: isDark),

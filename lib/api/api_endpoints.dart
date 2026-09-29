@@ -94,6 +94,23 @@ class ApiEndpoints {
 
   // --- Guardian (parent portal) ---
   /// Mirrors `/user/me`, which a guardian token is refused on.
+  // ── Leave, notifications, invoices ─────────
+  //  Shared by every signed-in role: a staff member's leave, anyone's
+  //  notifications, and a member's own invoices.
+  static const myLeaves = '/leaves';
+  static String myLeave(int id) => '/leaves/$id';
+
+  static const notifications = '/notifications';
+  static String notificationRead(String id) => '/notifications/$id/read';
+  static const notificationsReadAll = '/notifications/read-all';
+
+  static const myInvoices = '/invoices';
+  // A one-hour signed link to the printable invoice.
+  static String invoiceLink(int id) => '/invoices/$id/link';
+
+  // Push registration. The token comes from Firebase on the device.
+  static const devices = '/devices';
+
   static const guardianMe = '/guardian/me';
   static const guardianLogout = '/guardian/logout';
 

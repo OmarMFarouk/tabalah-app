@@ -14,6 +14,7 @@ import 'package:tabala/cubits/trainer_profile_cubit.dart';
 import 'package:tabala/models/membership_model.dart';
 import 'package:tabala/models/user_model.dart';
 import 'package:tabala/src/colors/app_colors.dart';
+import 'package:tabala/views/shared/leaves_view.dart';
 import 'package:tabala/views/player/player_main_view.dart';
 import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/src/theme/app_theme_provider.dart';
@@ -168,6 +169,34 @@ class _TrainerProfileViewState extends State<TrainerProfileView> {
             child: Text(
               (trainer?.bio?.isNotEmpty ?? false) ? trainer!.bio! : 'no_bio_yet'.tr(),
               style: AppStyles.regular14Grey,
+            ),
+          ),
+
+          // Leave lives here rather than in the tab bar: a trainer asks for
+          // it a handful of times a year, and the bar is for the daily work.
+          SectionHeader(title: 'leaves'.tr()),
+          ClubCard(
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const LeavesView()),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.beach_access_rounded, size: 18, color: AppColors.goldInk),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('my_leave_requests'.tr(), style: AppStyles.bold14Black),
+                        const SizedBox(height: 4),
+                        Text('leaves_desc'.tr(), style: AppStyles.regular12Grey),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_left_rounded, color: AppColors.greycolor),
+                ],
+              ),
             ),
           ),
 
