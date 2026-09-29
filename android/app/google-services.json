@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1062268474760",
+    "project_id": "tabala-academy",
+    "storage_bucket": "tabala-academy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1062268474760:android:b9c48226caea52fab4d63d",
+        "android_client_info": {
+          "package_name": "com.tabalahacademy.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2USrlHyppN3fHsNLeQhx6EFnNDK805Sw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

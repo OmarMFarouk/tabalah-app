@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:tabala/components/general/avatar_picker_sheet.dart';
 import 'package:tabala/components/general/club_widgets.dart';
+import 'package:tabala/components/general/notification_setting_tile.dart';
 import 'package:tabala/components/general/custom_elevated_button.dart';
 import 'package:tabala/components/general/custom_text_form_field.dart';
 import 'package:tabala/cubits/async_state.dart';
@@ -254,6 +255,8 @@ class _TrainerProfileViewState extends State<TrainerProfileView> {
                     ),
                   ],
                 ),
+                Divider(color: AppColors.borderColor, height: 22),
+                const NotificationSettingTile(),
                 Divider(color: AppColors.borderColor, height: 22),
                 Row(
                   children: [

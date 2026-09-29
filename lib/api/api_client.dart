@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
-import 'dart:io' show HttpHeaders;
+import 'dart:io' show HttpHeaders, Platform;
 
 import 'package:dio/dio.dart';
 
 import 'package:tabala/src/app_scope.dart';
+import 'package:tabala/src/push/push_service.dart';
 import 'package:tabala/src/sec_prefs/app_sec_prefs.dart';
 import 'api_config.dart';
 import 'api_exception.dart';
@@ -63,6 +64,19 @@ class ApiClient {
           // one that quietly didn't would show Arabic inside an English
           // screen, which is the bug this whole header exists to fix.
           options.headers['X-App-Locale'] = AppScope.locale;
+
+          // The push token rides along on every call, and the server upserts
+          // whatever it sees. A token registered once at sign-in goes stale
+          // silently - a reinstall, a restore onto a new handset, Firebase
+          // rotating it - and the first anyone would know is a notification
+          // that never arrived. Sending it continuously makes the
+          // registration self-heal: by the time there is something to push,
+          // the last request already said where this device is.
+          final push = PushService.instance.currentToken;
+          if (push != null && push.isNotEmpty) {
+            options.headers['X-Device-Token'] = push;
+            options.headers['X-Device-Platform'] = Platform.operatingSystem;
+          }
 
           handler.next(options);
         },

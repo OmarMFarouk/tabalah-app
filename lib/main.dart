@@ -14,6 +14,8 @@ import 'package:tabala/cubits/auth/auth_state.dart';
 import 'package:tabala/src/app_scope.dart';
 import 'package:tabala/src/colors/app_colors.dart';
 import 'package:tabala/src/localization/app_localization.dart';
+import 'package:tabala/src/push/push_listener.dart';
+import 'package:tabala/src/push/push_service.dart';
 import 'package:tabala/src/theme/app_theme_provider.dart';
 import 'package:tabala/src/theme/app_themes.dart';
 import 'package:tabala/src/theme/theme_signal.dart';
@@ -28,6 +30,12 @@ void main() async {
   // 'ar')` throws a LocaleDataException - and since nearly every screen
   // formats a date, the Arabic build white-screens on the home page.
   await initializeDateFormatting();
+
+  // Firebase and the push token. Awaited so the very first API call already
+  // carries the token - see ApiClient's interceptor. It never throws: a
+  // device without Play Services, or a user who declined the permission,
+  // simply ends up with push unavailable and an app that works as before.
+  await PushService.instance.init();
 
   runApp(
     EasyLocalization(
@@ -234,7 +242,7 @@ class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
                   _navigatorKey.currentState?.popUntil((route) => route.isFirst);
                 });
               },
-              child: AuthGate(),
+              child: PushListener(child: AuthGate()),
             ),
           ),
         );

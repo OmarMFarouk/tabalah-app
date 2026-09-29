@@ -438,5 +438,8 @@
   "invoice_number": "Invoice number",
   "subscription_frozen": "Frozen",
   "subscription_frozen_desc": "Your subscription is paused; the frozen days are added back to its length",
-  "frozen": "Frozen"
+  "frozen": "Frozen",
+  "open": "Open",
+  "enable": "Enable",
+  "notifications_blocked": "Notifications are blocked in system settings"
 }

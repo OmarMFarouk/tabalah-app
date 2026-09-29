@@ -1,4 +1,4 @@
-package com.example.tabala
+package com.tabalahacademy.app
 
 import io.flutter.embedding.android.FlutterActivity
 

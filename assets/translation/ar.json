@@ -438,5 +438,8 @@
   "invoice_number": "رقم الفاتورة",
   "subscription_frozen": "مجمّد",
   "subscription_frozen_desc": "اشتراكك موقوف مؤقتاً وستُضاف أيام التجميد إلى مدته",
-  "frozen": "مجمّد"
+  "frozen": "مجمّد",
+  "open": "فتح",
+  "enable": "تفعيل",
+  "notifications_blocked": "الإشعارات محظورة من إعدادات النظام"
 }
