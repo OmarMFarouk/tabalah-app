@@ -28,6 +28,19 @@ class ApiEndpoints {
   static const employeeAttendanceToday = '/employee/attendance/today';
   static const employeeAttendances = '/employee/attendances';
   static const employeeCheckIn = '/employee/attendance';
+  static const employeeCheckOut = '/employee/attendance/checkout';
+  static const employeeSalaries = '/employee/salaries';
+
+  // Payslip PDF - a 30-minute signed link, for the person paid.
+  static String payslipLink(int id) => '/payslips/$id/link';
+
+  // The unified number, WhatsApp and the rest. Public.
+  static const contact = '/contact';
+
+  // The shop: browse, order, pay and collect at the desk.
+  static const storeProducts = '/store/products';
+  static const storeOrders = '/store/orders';
+  static String storeOrderCancel(int id) => '/store/orders/$id/cancel';
 
   static const verifyEmail = '/verify-email';
   static const resendVerification = '/resend-verification';

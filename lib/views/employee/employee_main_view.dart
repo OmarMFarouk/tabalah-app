@@ -15,6 +15,7 @@ import 'package:tabala/src/utils/app_date.dart';
 import 'package:tabala/views/player/player_main_view.dart'
     show ClubBottomNav, ClubNavItem;
 import 'package:tabala/views/shared/leaves_view.dart';
+import 'package:tabala/views/shared/payslips_view.dart';
 
 /// The employee portal.
 ///
@@ -41,7 +42,11 @@ class _EmployeeMainViewState extends State<EmployeeMainView> {
       extendBody: true,
       body: IndexedStack(
         index: _index,
-        children: const [_ClockInView(), LeavesView(asTab: true)],
+        children: const [
+          _ClockInView(),
+          LeavesView(asTab: true),
+          PayslipsView(asTab: true),
+        ],
       ),
       bottomNavigationBar: ClubBottomNav(
         index: _index,
@@ -56,6 +61,11 @@ class _EmployeeMainViewState extends State<EmployeeMainView> {
             Icons.beach_access_rounded,
             Icons.beach_access_outlined,
             'leaves'.tr(),
+          ),
+          ClubNavItem(
+            Icons.payments_rounded,
+            Icons.payments_outlined,
+            'my_payslips'.tr(),
           ),
         ],
       ),
@@ -118,6 +128,19 @@ class _ClockInViewState extends State<_ClockInView> {
     );
   }
 
+  Future<void> _checkOut() async {
+    setState(() => _submitting = true);
+    final error = await _cubit.checkOut();
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'checkout_recorded'.tr()),
+        backgroundColor: error != null ? AppColors.redcolor : AppColors.primarycolor,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthCubit>().currentUser;
@@ -167,7 +190,31 @@ class _ClockInViewState extends State<_ClockInView> {
   }
 
   List<Widget> _content(EmployeeAttendanceData data) {
-    final done = data.checkedInToday;
+    final inDone = data.checkedInToday;
+    final outDone = data.checkedOutToday;
+    final today = data.today;
+
+    // Three steps in one card: not in yet, on shift, done for the day.
+    final (IconData icon, Color tint, String title, String sub) = !inDone
+        ? (Icons.location_on_rounded, AppColors.goldInk, 'attendance_not_yet'.tr(), 'attendance_gps_hint'.tr())
+        : !outDone
+            ? (Icons.timelapse_rounded, AppColors.primarycolor, 'on_shift'.tr(),
+                'attendance_done_at'.tr(args: [AppDate.time(today!.checkedInAt, fallback: '')]))
+            : (Icons.check_circle_rounded, AppColors.primarycolor, 'shift_complete'.tr(),
+                'shift_summary'.tr(args: [
+                  AppDate.time(today!.checkedInAt, fallback: ''),
+                  AppDate.time(today.checkedOutAt!, fallback: ''),
+                  (today.hours ?? 0).toStringAsFixed(1),
+                ]));
+
+    final VoidCallback? action = _submitting || outDone ? null : (inDone ? _checkOut : _checkIn);
+    final label = _submitting
+        ? 'locating'.tr()
+        : outDone
+            ? 'shift_complete'.tr()
+            : inDone
+                ? 'record_checkout'.tr()
+                : 'record_attendance'.tr();
 
     return [
       Padding(
@@ -176,61 +223,41 @@ class _ClockInViewState extends State<_ClockInView> {
           padding: const EdgeInsets.all(22),
           child: Column(
             children: [
-              Icon(
-                done ? Icons.check_circle_rounded : Icons.location_on_rounded,
-                size: 52,
-                color: done ? AppColors.primarycolor : AppColors.goldInk,
-              ),
+              Icon(icon, size: 52, color: tint),
               const SizedBox(height: 14),
-              Text(
-                done ? 'attendance_done_today'.tr() : 'attendance_not_yet'.tr(),
-                textAlign: TextAlign.center,
-                style: AppStyles.bold18Black,
-              ),
+              Text(title, textAlign: TextAlign.center, style: AppStyles.bold18Black),
               const SizedBox(height: 6),
-              Text(
-                done
-                    ? 'attendance_done_at'.tr(args: [
-                        AppDate.time(data.today!.checkedInAt, fallback: '')
-                      ])
-                    : 'attendance_gps_hint'.tr(),
-                textAlign: TextAlign.center,
-                style: AppStyles.regular14Grey,
-              ),
+              Text(sub, textAlign: TextAlign.center, style: AppStyles.regular14Grey),
+              if (today?.isManual ?? false) ...[
+                const SizedBox(height: 8),
+                StatusChip(label: 'recorded_by_hr'.tr(), color: AppColors.goldInk, dense: true),
+              ],
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton.icon(
-                  // Disabled once done: one per day is enforced by a unique
-                  // index, so offering the button again only earns a refusal.
-                  onPressed: (done || _submitting) ? null : _checkIn,
+                  onPressed: action,
                   icon: _submitting
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2.2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
                         )
-                      : const Icon(Icons.fingerprint_rounded),
-                  label: Text(
-                    _submitting
-                        ? 'locating'.tr()
-                        : (done
-                            ? 'attendance_recorded'.tr()
-                            : 'record_attendance'.tr()),
-                  ),
+                      : Icon(inDone ? Icons.logout_rounded : Icons.fingerprint_rounded),
+                  label: Text(label),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primarycolor,
-                    foregroundColor: AppColors.clubGreenDeep,
-                    disabledBackgroundColor:
-                        AppColors.primary.withValues(alpha: .25),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                    backgroundColor: inDone ? AppColors.goldInk : AppColors.primarycolor,
+                    foregroundColor: inDone ? Colors.white : AppColors.clubGreenDeep,
+                    disabledBackgroundColor: AppColors.primary.withValues(alpha: .25),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
+              if (!inDone) ...[
+                const SizedBox(height: 10),
+                Text('gps_fallback_hint'.tr(), textAlign: TextAlign.center, style: AppStyles.regular12Grey),
+              ],
             ],
           ),
         ),
@@ -298,8 +325,14 @@ class _ClockInViewState extends State<_ClockInView> {
                                   style: AppStyles.medium14Black,
                                 ),
                               ),
+                              if (r.isManual) ...[
+                                StatusChip(label: 'manual'.tr(), color: AppColors.goldInk, dense: true),
+                                const SizedBox(width: 8),
+                              ],
                               Text(
-                                AppDate.time(r.checkedInAt, fallback: ''),
+                                r.checkedOut
+                                    ? '${AppDate.time(r.checkedInAt, fallback: '')} - ${AppDate.time(r.checkedOutAt!, fallback: '')}'
+                                    : AppDate.time(r.checkedInAt, fallback: ''),
                                 style: AppStyles.regular14Grey,
                               ),
                             ],

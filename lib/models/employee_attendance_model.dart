@@ -15,6 +15,7 @@ class EmployeeAttendanceData {
   });
 
   bool get checkedInToday => today != null;
+  bool get checkedOutToday => today?.checkedOut ?? false;
 
   factory EmployeeAttendanceData.fromJson(
     Map<String, dynamic> today,
@@ -36,21 +37,41 @@ class EmployeeAttendanceRow {
   final int id;
   final String date;
   final String checkedInAt;
+  final String? checkedOutAt;
   final int distanceMeters;
+
+  /// `gps` from the phone, `manual` when HR entered it.
+  final String method;
 
   const EmployeeAttendanceRow({
     required this.id,
     required this.date,
     required this.checkedInAt,
     required this.distanceMeters,
+    this.checkedOutAt,
+    this.method = 'gps',
   });
+
+  bool get checkedOut => checkedOutAt != null && checkedOutAt!.isNotEmpty;
+  bool get isManual => method == 'manual';
+
+  /// Hours on site, or null while still clocked in.
+  double? get hours {
+    if (!checkedOut) return null;
+    final a = DateTime.tryParse(checkedInAt);
+    final b = DateTime.tryParse(checkedOutAt!);
+    if (a == null || b == null) return null;
+    return b.difference(a).inMinutes / 60;
+  }
 
   factory EmployeeAttendanceRow.fromJson(Map<String, dynamic> json) =>
       EmployeeAttendanceRow(
         id: J.asInt(json['id']),
         date: J.asString(json['date']),
         checkedInAt: J.asString(json['checked_in_at']),
+        checkedOutAt: J.asStringOrNull(json['checked_out_at']),
         distanceMeters: J.asInt(json['distance_meters']),
+        method: J.asStringOrNull(json['method']) ?? 'gps',
       );
 }
 

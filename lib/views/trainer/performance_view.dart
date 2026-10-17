@@ -6,7 +6,7 @@ import 'package:tabala/components/general/club_widgets.dart';
 import 'package:tabala/cubits/async_state.dart';
 import 'package:tabala/cubits/trainer_performance_cubit.dart';
 import 'package:tabala/models/kpi_record_model.dart';
-import 'package:tabala/models/salary_model.dart';
+import 'package:tabala/views/shared/payslips_view.dart';
 import 'package:tabala/src/colors/app_colors.dart';
 import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/src/utils/app_date.dart';
@@ -107,7 +107,7 @@ class _TrainerPerformanceViewState extends State<TrainerPerformanceView> {
                         label: 'latest_salary'.tr(),
                         value: data.latestSalary == null
                             ? '—'
-                            : AppMoney.amount(data.latestSalary!.amount),
+                            : AppMoney.amount(data.latestSalary!.takeHome),
                         icon: Icons.payments_rounded,
                         onDark: true,
                       ),
@@ -130,7 +130,7 @@ class _TrainerPerformanceViewState extends State<TrainerPerformanceView> {
               child: Text('no_salary_records'.tr(), style: AppStyles.regular14Grey),
             )
           else
-            ...data.salaries.map(_salaryRow),
+            ...data.salaries.map((s) => PayslipCard(salary: s)),
         ],
       ),
     );
@@ -172,39 +172,6 @@ class _TrainerPerformanceViewState extends State<TrainerPerformanceView> {
             value: kpi.progress,
             color: kpi.isMet ? AppColors.greencolor : AppColors.goldInk,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _salaryRow(SalaryModel salary) {
-    return ClubCard(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: .14),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.payments_rounded, size: 20, color: AppColors.goldInk),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppDate.monthYear(salary.period), style: AppStyles.bold14Black),
-                const SizedBox(height: 2),
-                Text('period'.tr(), style: AppStyles.regular12Grey),
-              ],
-            ),
-          ),
-          Text(AppMoney.amount(salary.amount), style: AppStyles.bold16Gold),
         ],
       ),
     );

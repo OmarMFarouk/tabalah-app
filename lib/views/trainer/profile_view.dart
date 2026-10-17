@@ -15,7 +15,10 @@ import 'package:tabala/cubits/trainer_profile_cubit.dart';
 import 'package:tabala/models/membership_model.dart';
 import 'package:tabala/models/user_model.dart';
 import 'package:tabala/src/colors/app_colors.dart';
+import 'package:tabala/components/general/nav_tile.dart';
+import 'package:tabala/views/shared/contact_view.dart';
 import 'package:tabala/views/shared/leaves_view.dart';
+import 'package:tabala/views/shared/store_view.dart';
 import 'package:tabala/views/player/player_main_view.dart';
 import 'package:tabala/src/theme/app_styles.dart';
 import 'package:tabala/src/theme/app_theme_provider.dart';
@@ -199,6 +202,20 @@ class _TrainerProfileViewState extends State<TrainerProfileView> {
                 ],
               ),
             ),
+          ),
+
+          SectionHeader(title: 'academy'.tr()),
+          NavTile(
+            icon: Icons.storefront_rounded,
+            title: 'store'.tr(),
+            subtitle: 'store_desc'.tr(),
+            onTap: () => StoreView.open(context),
+          ),
+          NavTile(
+            icon: Icons.support_agent_rounded,
+            title: 'contact_us'.tr(),
+            subtitle: 'contact_us_desc'.tr(),
+            onTap: () => ContactView.open(context),
           ),
 
           SectionHeader(title: 'contact'.tr()),

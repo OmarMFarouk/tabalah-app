@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:tabala/components/general/avatar_picker_sheet.dart';
 import 'package:tabala/components/general/club_widgets.dart';
 import 'package:tabala/components/general/notification_setting_tile.dart';
+import 'package:tabala/views/shared/contact_view.dart';
+import 'package:tabala/views/shared/store_view.dart';
 import 'package:tabala/components/general/custom_elevated_button.dart';
 import 'package:tabala/components/general/custom_text_form_field.dart';
 import 'package:tabala/cubits/async_state.dart';
@@ -231,6 +233,31 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
           ],
+
+          // The shop and the front desk. Ordering is the member's own
+          // account - the guardian token is read-only and the store routes
+          // refuse it - so a parent sees only the contact details.
+          SectionHeader(title: 'academy'.tr()),
+          if (!AppScope.isGuardian) ...[
+            _tile(
+              icon: Icons.storefront_rounded,
+              title: 'store'.tr(),
+              subtitle: 'store_desc'.tr(),
+              onTap: () => StoreView.open(context),
+            ),
+            _tile(
+              icon: Icons.receipt_long_rounded,
+              title: 'my_orders'.tr(),
+              subtitle: 'my_orders_desc'.tr(),
+              onTap: () => StoreView.open(context, orders: true),
+            ),
+          ],
+          _tile(
+            icon: Icons.support_agent_rounded,
+            title: 'contact_us'.tr(),
+            subtitle: 'contact_us_desc'.tr(),
+            onTap: () => ContactView.open(context),
+          ),
 
           // The QR is an identity badge, not an action: a parent presenting
           // it at the door is the whole point of the guardian session, so it

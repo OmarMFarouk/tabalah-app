@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:tabala/src/app_scope.dart';
+import 'package:tabala/views/shared/store_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:tabala/components/general/club_widgets.dart';
@@ -172,6 +174,32 @@ class _PlayerHomeViewState extends State<PlayerHomeView> {
           children: data.todaySessions
               .map((s) => SessionCarouselCard(session: s))
               .toList(),
+        ),
+
+      // ── Store ───────────────────────────────────────────────────────
+      if (!AppScope.isGuardian)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+          child: ClubCard(
+            onTap: () => StoreView.open(context),
+            child: Row(
+              children: [
+                Icon(Icons.storefront_rounded, color: AppColors.goldInk, size: 30),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('store'.tr(), style: AppStyles.bold16Black),
+                      const SizedBox(height: 2),
+                      Text('store_desc'.tr(), style: AppStyles.regular12Grey),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.greycolor),
+              ],
+            ),
+          ),
         ),
 
       // ── Coaches rail ────────────────────────────────────────────────

@@ -89,4 +89,24 @@ class EmployeeAttendanceCubit extends Cubit<AsyncState<EmployeeAttendanceData>> 
       return e.message;
     }
   }
+
+  /// Clock out. The position is attached when the phone has one, but a
+  /// failed fix does not block it - arriving is the verified claim, and a
+  /// dead GPS at the end of a shift must not leave someone clocked in.
+  Future<String?> checkOut() async {
+    final (pos, _) = await _position();
+    try {
+      await ApiClient.instance.post(
+        ApiEndpoints.employeeCheckOut,
+        data: {
+          if (pos != null) 'latitude': pos.latitude,
+          if (pos != null) 'longitude': pos.longitude,
+        },
+      );
+      await load(refresh: true);
+      return null;
+    } on ApiException catch (e) {
+      return e.message;
+    }
+  }
 }
