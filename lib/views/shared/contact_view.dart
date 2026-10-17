@@ -99,6 +99,17 @@ class _ContactViewState extends State<ContactView> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
+                const SizedBox(height: 12),
+                Text('policies'.tr(), style: AppStyles.bold14Gold),
+                const SizedBox(height: 8),
+                for (final (icon, key, path) in const [
+                  (Icons.gavel_rounded, 'terms_and_conditions', 'terms'),
+                  (Icons.privacy_tip_rounded, 'privacy_policy', 'privacy'),
+                  (Icons.fact_check_rounded, 'consents', 'consent'),
+                  (Icons.health_and_safety_rounded, 'read_pledge', 'guardian-pledge'),
+                  (Icons.storefront_rounded, 'store_policy', 'store-policy'),
+                ])
+                  _row(icon, key.tr(), 'tabalahacademy.com/$path', () => _go('${c.website ?? 'https://tabalahacademy.com'}/$path')),
               ],
             ),
     );

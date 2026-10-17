@@ -492,5 +492,8 @@
   "website": "Website",
   "whatsapp": "WhatsApp",
   "whatsapp_desc": "Message us directly",
-  "your_order": "Your order"
+  "your_order": "Your order",
+  "policies": "Policies & consents",
+  "consents": "Consents & permissions",
+  "store_policy": "Store & returns policy"
 }
