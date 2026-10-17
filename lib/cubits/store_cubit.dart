@@ -93,6 +93,7 @@ class StoreCubit extends Cubit<AsyncState<StoreData>> {
 
   void add(ProductModel p) {
     if (qty(p.id) >= p.stock) return;
+    _known[p.id] = p; // the total needs its price, wherever it was added from
     cart[p.id] = qty(p.id) + 1;
     _refresh();
   }
